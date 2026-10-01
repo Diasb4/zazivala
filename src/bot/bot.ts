@@ -63,7 +63,29 @@ export class ZazyvalaBot {
       return;
     }
 
-    // 3. Handle Messages
+    // 3. Handle Chat Member Updates (any user joined, left, kicked, etc.)
+    if (update.chat_member) {
+      const ev = update.chat_member;
+      const isGroup = ev.chat.type === 'group' || ev.chat.type === 'supergroup';
+      if (isGroup && !ev.new_chat_member.user.is_bot) {
+        const status = ev.new_chat_member.status;
+        if (status === 'member' || status === 'administrator' || status === 'restricted') {
+          await this.storage.upsertUser(ev.chat.id, {
+            id: ev.new_chat_member.user.id,
+            first_name: ev.new_chat_member.user.first_name,
+            last_name: ev.new_chat_member.user.last_name,
+            username: ev.new_chat_member.user.username,
+            opted_out: false,
+            updated_at: Date.now(),
+          });
+        } else if (status === 'left' || status === 'kicked') {
+          await this.storage.removeUser(ev.chat.id, ev.new_chat_member.user.id);
+        }
+      }
+      return;
+    }
+
+    // 4. Handle Messages
     const message: TelegramMessage | undefined =
       update.message || update.edited_message;
     if (!message) return;
@@ -296,16 +318,15 @@ export class ZazyvalaBot {
    */
   async sendGroupWelcome(chatId: number): Promise<void> {
     const text =
-      '<b>Всем привет! Я Зазывала (Tag Bot)</b> — бот для быстрого созыва участников чата.\n\n' +
-      '<b>Основные команды:</b>\n' +
-      '• <code>/all [сообщение]</code> — созвать всех участников чата\n' +
-      '• <code>/admins [сообщение]</code> — созвать администраторов чата\n' +
-      '• <code>/setme &lt;позывной&gt;</code> — задать личный позывной/эмодзи\n' +
+      '<b>Бот Зазывала подключен.</b>\n\n' +
+      'Команды:\n' +
+      '• <code>/all [сообщение]</code> — созвать всех участников\n' +
+      '• <code>/admins [сообщение]</code> — созвать администраторов\n' +
+      '• <code>/setme &lt;позывной&gt;</code> — задать личный позывной\n' +
       '• <code>/out</code> и <code>/in</code> — отключить/включить вызовы /all\n' +
-      '• <code>/settings</code> — настройки чата (скрытый режим, кулдаун, права)\n' +
-      '• <code>/help</code> — подробная справка и списки\n\n' +
-      '<b>Как это работает:</b> Telegram Bot API не передает ботам список участников сразу. ' +
-      'Я автоматически запоминаю вас, когда вы пишете сообщения в чат!';
+      '• <code>/settings</code> — настройки чата\n' +
+      '• <code>/help</code> — полная справка\n\n' +
+      '<i>Участники автоматически добавляются в базу при отправке сообщений в чат.</i>';
 
     try {
       await this.client.sendMessage(chatId, text);

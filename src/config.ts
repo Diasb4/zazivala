@@ -31,6 +31,6 @@ export function getConfig(): BotConfig {
     defaultPermissions:
       process.env.DEFAULT_PERMISSIONS === 'admins' ? 'admins' : 'everyone',
     defaultTagMode:
-      (process.env.DEFAULT_TAG_MODE as 'text' | 'hidden' | 'callsign') || 'text',
+      (process.env.DEFAULT_TAG_MODE as 'text' | 'hidden' | 'callsign') || 'hidden',
   };
 }

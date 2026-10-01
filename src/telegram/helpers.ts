@@ -51,13 +51,15 @@ export function formatBatchMentions(
     const hiddenLinks = users
       .map((u) => `<a href="tg://user?id=${u.id}">&#8203;</a>`)
       .join('');
-    const baseText = customMessage?.trim() || '📢 <b>Внимание!</b>';
+    const baseText = customMessage?.trim()
+      ? escapeHtml(customMessage.trim())
+      : 'Общий сбор';
     return `${baseText}${hiddenLinks}`;
   }
 
   const mentions = users.map((u) => createMention(u, mode)).join(', ');
   if (customMessage?.trim()) {
-    return `📢 <b>${escapeHtml(customMessage.trim())}</b>\n\n${mentions}`;
+    return `${escapeHtml(customMessage.trim())}\n\n${mentions}`;
   }
   return mentions;
 }

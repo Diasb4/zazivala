@@ -16,7 +16,7 @@ export async function handleAllCommand(
   if (!isGroup) {
     await client.sendMessage(
       chatId,
-      '❌ Команда <b>/all</b> работает только в группах и супергруппах!'
+      'Команда <b>/all</b> работает только в группах.'
     );
     return;
   }
@@ -39,7 +39,7 @@ export async function handleAllCommand(
   if (settings.permissions === 'admins' && !isAdmin) {
     await client.sendMessage(
       chatId,
-      '🔒 В этой группе вызывать участников могут только <b>администраторы</b>.'
+      'Вызывать участников могут только администраторы.'
     );
     return;
   }
@@ -50,7 +50,7 @@ export async function handleAllCommand(
     if (remaining > 0) {
       await client.sendMessage(
         chatId,
-        `⏳ <b>Кулдаун!</b> Подождите еще <code>${remaining}</code> сек. перед следующим вызовом.`
+        `Кулдаун. Подождите ${remaining} сек.`
       );
       return;
     }
@@ -59,14 +59,19 @@ export async function handleAllCommand(
   // Fetch active users (opted-out are excluded)
   const users = await storage.getUsers(chatId, { includeOptedOut: false });
 
-  if (users.length === 0) {
+  // Exclude the caller from being tagged in their own /all call
+  const targetUsers =
+    senderId && users.length > 1
+      ? users.filter((u) => u.id !== senderId)
+      : users;
+
+  if (
+    targetUsers.length === 0 ||
+    (targetUsers.length === 1 && targetUsers[0].id === senderId)
+  ) {
     await client.sendMessage(
       chatId,
-      'ℹ️ <b>В базе бота пока нет участников этого чата.</b>\n\n' +
-        'Telegram Bot API не отдает список участников сразу. ' +
-        'Бот запоминает участников по мере их активности в чате (когда они пишут сообщения) ' +
-        'или когда они вводят команду <code>/in</code>.\n\n' +
-        '👉 <i>Вы можете использовать <code>/admins</code> прямо сейчас, чтобы созвать всех администраторов!</i>'
+      'В базе бота пока нет других участников. Отправьте сообщения в чат или используйте /admins.'
     );
     return;
   }
@@ -76,7 +81,7 @@ export async function handleAllCommand(
 
   // Chunk users into batches (default 5 users per message to guarantee push notifications)
   const chunkSize = settings.chunk_size || 5;
-  const chunks = chunkArray(users, chunkSize);
+  const chunks = chunkArray(targetUsers, chunkSize);
 
   // Auto-delete trigger message if configured
   if (settings.delete_trigger && message.message_id) {
@@ -95,7 +100,11 @@ export async function handleAllCommand(
       for (let i = 1; i < maxBatches; i++) {
         // 1-second delay to comply with Telegram chat rate limits (max 20 msgs/min)
         await sleep(1000);
-        const text = formatBatchMentions(chunks[i], settings.tag_mode);
+        const batchPrefix =
+          settings.tag_mode === 'hidden'
+            ? `[${i + 1}/${chunks.length}]`
+            : undefined;
+        const text = formatBatchMentions(chunks[i], settings.tag_mode, batchPrefix);
         try {
           await client.sendMessage(chatId, text);
         } catch (err) {

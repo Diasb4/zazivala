@@ -84,6 +84,13 @@ export interface TelegramUpdate {
     old_chat_member: TelegramChatMember;
     new_chat_member: TelegramChatMember;
   };
+  chat_member?: {
+    chat: TelegramChat;
+    from: TelegramUser;
+    date: number;
+    old_chat_member: TelegramChatMember;
+    new_chat_member: TelegramChatMember;
+  };
 }
 
 export interface TelegramWebhookInfo {

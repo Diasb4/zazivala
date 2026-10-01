@@ -11,14 +11,14 @@ export function buildSettingsKeyboard(
   settings: ChatSettings
 ): TelegramInlineKeyboardMarkup {
   const modeLabels: Record<TagMode, string> = {
-    text: '💬 Имена',
-    hidden: '👻 Скрытый',
-    callsign: '🎭 Позывные',
+    text: 'Имена',
+    hidden: 'Скрытый',
+    callsign: 'Позывные',
   };
 
   const permLabels: Record<PermissionsMode, string> = {
-    everyone: '👥 Все',
-    admins: '👮 Админы',
+    everyone: 'Все',
+    admins: 'Админы',
   };
 
   return {
@@ -35,7 +35,7 @@ export function buildSettingsKeyboard(
           callback_data: 'cfg:cycle_cooldown',
         },
         {
-          text: `Пачка: ${settings.chunk_size} чел.`,
+          text: `Пачка: ${settings.chunk_size}`,
           callback_data: 'cfg:cycle_chunk',
         },
       ],
@@ -45,13 +45,13 @@ export function buildSettingsKeyboard(
           callback_data: 'cfg:toggle_perm',
         },
         {
-          text: `Удалять команду: ${settings.delete_trigger ? '✅ Да' : '❌ Нет'}`,
+          text: `Удалять /all: ${settings.delete_trigger ? 'Да' : 'Нет'}`,
           callback_data: 'cfg:toggle_delete',
         },
       ],
       [
         {
-          text: '🔄 Обновить меню',
+          text: 'Обновить',
           callback_data: 'cfg:refresh',
         },
       ],
@@ -62,24 +62,23 @@ export function buildSettingsKeyboard(
 export function formatSettingsText(settings: ChatSettings): string {
   const modeDesc =
     settings.tag_mode === 'text'
-      ? '<b>Имена</b> (кликабельные ссылки на участников)'
+      ? 'Имена'
       : settings.tag_mode === 'hidden'
-      ? '<b>Скрытый</b> (упоминания через невидимые символы — чат остается чистым!)'
-      : '<b>Позывные</b> (персональные позывные/эмодзи, установленные через /setme)';
+      ? 'Скрытый (zero-width)'
+      : 'Позывные (/setme)';
 
   const permDesc =
     settings.permissions === 'admins'
-      ? '<b>Только администраторы</b>'
-      : '<b>Все участники чата</b>';
+      ? 'Только администраторы'
+      : 'Все участники';
 
   return (
-    '⚙️ <b>Настройки Зазывалы для этого чата:</b>\n\n' +
-    `• <b>Режим вызова:</b> ${modeDesc}\n` +
-    `• <b>Задержка (кулдаун):</b> <code>${settings.cooldown_seconds}</code> сек.\n` +
-    `• <b>Участников в сообщении:</b> <code>${settings.chunk_size}</code>\n` +
-    `• <b>Кто может вызывать:</b> ${permDesc}\n` +
-    `• <b>Удалять команду /all:</b> ${settings.delete_trigger ? '<b>Включено</b>' : '<b>Выключено</b>'}\n\n` +
-    '<i>Нажимайте на кнопки ниже для изменения параметров:</i>'
+    '<b>Настройки чата:</b>\n\n' +
+    `• Режим: <b>${modeDesc}</b>\n` +
+    `• Кулдаун: <code>${settings.cooldown_seconds}с</code>\n` +
+    `• Размер пачки: <code>${settings.chunk_size}</code>\n` +
+    `• Кто может вызывать: <b>${permDesc}</b>\n` +
+    `• Удалять команду /all: <b>${settings.delete_trigger ? 'Да' : 'Нет'}</b>`
   );
 }
 
@@ -94,26 +93,30 @@ export async function handleSettingsCommand(
   if (!isGroup) {
     await client.sendMessage(
       chatId,
-      '❌ Команда <b>/settings</b> работает только в группах.'
+      'Команда <b>/settings</b> работает только в группах.'
     );
     return;
   }
 
   const sender = message.from;
-  if (sender) {
-    try {
-      const member = await client.getChatMember(chatId, sender.id);
-      const isAdmin = member.status === 'creator' || member.status === 'administrator';
-      if (!isAdmin) {
-        await client.sendMessage(
-          chatId,
-          '🔒 Только администраторы группы могут изменять настройки бота.'
-        );
-        return;
-      }
-    } catch {
-      // ignore
+  if (!sender) return;
+
+  try {
+    const member = await client.getChatMember(chatId, sender.id);
+    const isAdmin = member.status === 'creator' || member.status === 'administrator';
+    if (!isAdmin) {
+      await client.sendMessage(
+        chatId,
+        'Только администраторы группы могут изменять настройки бота.'
+      );
+      return;
     }
+  } catch {
+    await client.sendMessage(
+      chatId,
+      'Не удалось проверить права администратора. Убедитесь, что бот является администратором чата.'
+    );
+    return;
   }
 
   const settings = await storage.getSettings(chatId);
@@ -141,7 +144,7 @@ export async function handleSettingsCallback(
     if (!isAdmin) {
       await client.answerCallbackQuery(
         query.id,
-        '🔒 Только администраторы могут менять настройки!',
+        'Только администраторы могут менять настройки.',
         true
       );
       return;

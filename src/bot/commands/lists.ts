@@ -2,7 +2,7 @@ import { TelegramClient } from '../../telegram/client.js';
 import { TelegramMessage } from '../../telegram/types.js';
 import { StorageAdapter } from '../../storage/adapter.js';
 import { CustomList, UserRecord } from '../../types.js';
-import { chunkArray, escapeHtml, formatBatchMentions, sleep } from '../../telegram/helpers.js';
+import { chunkArray, escapeHtml, formatBatchMentions, sleep, createMention } from '../../telegram/helpers.js';
 
 export async function handleListsCommand(
   client: TelegramClient,
@@ -13,7 +13,7 @@ export async function handleListsCommand(
   const isGroup = message.chat.type === 'group' || message.chat.type === 'supergroup';
 
   if (!isGroup) {
-    await client.sendMessage(chatId, '❌ Команда работает только в группах.');
+    await client.sendMessage(chatId, 'Команда работает только в группах.');
     return;
   }
 
@@ -23,27 +23,25 @@ export async function handleListsCommand(
   if (listNames.length === 0) {
     await client.sendMessage(
       chatId,
-      '📋 <b>В этом чате пока нет пользовательских списков.</b>\n\n' +
-        'Вы можете создать список участников, например для игр, работы или дежурств:\n' +
-        '<code>/create_list dota Команда по Доте</code>\n\n' +
-        'Затем созвать участников командой:\n' +
-        '<code>/call dota Го катать!</code>'
+      'В этом чате пока нет списков.\n' +
+        'Создать: <code>/create_list &lt;имя&gt; [описание]</code>\n' +
+        'Вызвать: <code>/call &lt;имя&gt; [текст]</code>'
     );
     return;
   }
 
-  let text = '📋 <b>Пользовательские списки чата:</b>\n\n';
+  let text = '<b>Списки чата:</b>\n\n';
   for (const name of listNames) {
     const list = lists[name];
-    const desc = list.description ? ` — <i>${escapeHtml(list.description)}</i>` : '';
-    text += `• <b>${escapeHtml(name)}</b> (${list.member_ids.length} уч.)${desc}\n`;
-    text += `  👉 Вызов: <code>/call ${escapeHtml(name)}</code>\n`;
+    const desc = list.description ? ` - ${escapeHtml(list.description)}` : '';
+    text += `• <b>${escapeHtml(name)}</b> (${list.member_ids.length} чел.)${desc}\n` +
+      `  Вызов: <code>/call ${escapeHtml(name)}</code>\n\n`;
   }
 
   text +=
-    '\n<i>Управление:</i>\n' +
+    '<b>Команды:</b>\n' +
     '• <code>/create_list &lt;имя&gt; [описание]</code>\n' +
-    '• <code>/add_to_list &lt;имя&gt;</code> (ответом на сообщение пользователя)\n' +
+    '• <code>/add_to_list &lt;имя&gt;</code> (ответом на сообщение)\n' +
     '• <code>/remove_from_list &lt;имя&gt;</code>\n' +
     '• <code>/delete_list &lt;имя&gt;</code>';
 
@@ -66,7 +64,7 @@ export async function handleCreateListCommand(
   if (!rawName) {
     await client.sendMessage(
       chatId,
-      'ℹ️ Укажите название списка:\n' +
+      'Укажите название списка:\n' +
         '<code>/create_list dota Команда по Доте</code>'
     );
     return;
@@ -75,7 +73,7 @@ export async function handleCreateListCommand(
   if (rawName.length > 32 || !/^[a-zA-Z0-9а-яА-ЯёЁ_-]+$/.test(rawName)) {
     await client.sendMessage(
       chatId,
-      '❌ Имя списка должно содержать только буквы, цифры, дефис или подчеркивание (макс. 32 символа).'
+      'Имя списка должно содержать только буквы, цифры, дефис или подчеркивание (макс. 32 символа).'
     );
     return;
   }
@@ -84,7 +82,7 @@ export async function handleCreateListCommand(
   if (existing) {
     await client.sendMessage(
       chatId,
-      `⚠️ Список <b>${escapeHtml(rawName)}</b> уже существует.`
+      `Список <b>${escapeHtml(rawName)}</b> уже существует.`
     );
     return;
   }
@@ -103,7 +101,7 @@ export async function handleCreateListCommand(
 
   await client.sendMessage(
     chatId,
-    `✅ Список <b>${escapeHtml(rawName)}</b> создан!\n\n` +
+    `Список <b>${escapeHtml(rawName)}</b> создан.\n\n` +
       `Вы добавлены в этот список. Чтобы добавить других участников, ответьте на их сообщение командой:\n` +
       `<code>/add_to_list ${escapeHtml(rawName)}</code>\n\n` +
       `Чтобы созвать список:\n` +
@@ -124,7 +122,7 @@ export async function handleAddToListCommand(
   if (!listName) {
     await client.sendMessage(
       chatId,
-      'ℹ️ Укажите название списка:\n<code>/add_to_list &lt;имя_списка&gt;</code>'
+      'Укажите название списка:\n<code>/add_to_list &lt;имя_списка&gt;</code>'
     );
     return;
   }
@@ -133,7 +131,7 @@ export async function handleAddToListCommand(
   if (!list) {
     await client.sendMessage(
       chatId,
-      `❌ Список <b>${escapeHtml(listName)}</b> не найден.`
+      `Список <b>${escapeHtml(listName)}</b> не найден.`
     );
     return;
   }
@@ -150,7 +148,7 @@ export async function handleAddToListCommand(
   if (list.member_ids.includes(targetUser.id)) {
     await client.sendMessage(
       chatId,
-      `ℹ️ Пользователь <b>${escapeHtml(targetUser.first_name)}</b> уже есть в списке <b>${escapeHtml(listName)}</b>.`
+      `Пользователь <b>${escapeHtml(targetUser.first_name)}</b> уже есть в списке <b>${escapeHtml(listName)}</b>.`
     );
     return;
   }
@@ -170,7 +168,7 @@ export async function handleAddToListCommand(
 
   await client.sendMessage(
     chatId,
-    `✅ Пользователь <b>${escapeHtml(targetUser.first_name)}</b> добавлен в список <b>${escapeHtml(listName)}</b>! (всего: ${list.member_ids.length})`
+    `Пользователь <b>${escapeHtml(targetUser.first_name)}</b> добавлен в список <b>${escapeHtml(listName)}</b> (всего: ${list.member_ids.length}).`
   );
 }
 
@@ -187,7 +185,7 @@ export async function handleRemoveFromListCommand(
   if (!listName) {
     await client.sendMessage(
       chatId,
-      'ℹ️ Укажите название списка:\n<code>/remove_from_list &lt;имя_списка&gt;</code>'
+      'Укажите название списка:\n<code>/remove_from_list &lt;имя_списка&gt;</code>'
     );
     return;
   }
@@ -196,7 +194,7 @@ export async function handleRemoveFromListCommand(
   if (!list) {
     await client.sendMessage(
       chatId,
-      `❌ Список <b>${escapeHtml(listName)}</b> не найден.`
+      `Список <b>${escapeHtml(listName)}</b> не найден.`
     );
     return;
   }
@@ -208,7 +206,7 @@ export async function handleRemoveFromListCommand(
   if (idx === -1) {
     await client.sendMessage(
       chatId,
-      `ℹ️ Пользователя <b>${escapeHtml(targetUser.first_name)}</b> нет в списке <b>${escapeHtml(listName)}</b>.`
+      `Пользователя <b>${escapeHtml(targetUser.first_name)}</b> нет в списке <b>${escapeHtml(listName)}</b>.`
     );
     return;
   }
@@ -218,7 +216,7 @@ export async function handleRemoveFromListCommand(
 
   await client.sendMessage(
     chatId,
-    `✅ Пользователь <b>${escapeHtml(targetUser.first_name)}</b> удален из списка <b>${escapeHtml(listName)}</b>.`
+    `Пользователь <b>${escapeHtml(targetUser.first_name)}</b> удален из списка <b>${escapeHtml(listName)}</b>.`
   );
 }
 
@@ -236,7 +234,7 @@ export async function handleDeleteListCommand(
   if (!listName) {
     await client.sendMessage(
       chatId,
-      'ℹ️ Укажите название списка для удаления:\n<code>/delete_list &lt;имя_списка&gt;</code>'
+      'Укажите название списка для удаления:\n<code>/delete_list &lt;имя_списка&gt;</code>'
     );
     return;
   }
@@ -245,7 +243,7 @@ export async function handleDeleteListCommand(
   if (!list) {
     await client.sendMessage(
       chatId,
-      `❌ Список <b>${escapeHtml(listName)}</b> не найден.`
+      `Список <b>${escapeHtml(listName)}</b> не найден.`
     );
     return;
   }
@@ -264,7 +262,7 @@ export async function handleDeleteListCommand(
   if (!isAllowed) {
     await client.sendMessage(
       chatId,
-      '🔒 Удалить список может только его создатель или администратор чата.'
+      'Удалить список может только его создатель или администратор чата.'
     );
     return;
   }
@@ -272,7 +270,7 @@ export async function handleDeleteListCommand(
   await storage.deleteList(chatId, listName);
   await client.sendMessage(
     chatId,
-    `🗑️ Список <b>${escapeHtml(listName)}</b> успешно удален.`
+    `Список <b>${escapeHtml(listName)}</b> удален.`
   );
 }
 
@@ -291,7 +289,7 @@ export async function handleCallListCommand(
   if (!listName) {
     await client.sendMessage(
       chatId,
-      'ℹ️ Укажите имя списка для вызова:\n<code>/call &lt;имя_списка&gt; [сообщение]</code>'
+      'Укажите имя списка для вызова:\n<code>/call &lt;имя_списка&gt; [сообщение]</code>'
     );
     return;
   }
@@ -300,7 +298,7 @@ export async function handleCallListCommand(
   if (!list) {
     await client.sendMessage(
       chatId,
-      `❌ Список <b>${escapeHtml(listName)}</b> не найден. Посмотреть список: /lists`
+      `Список <b>${escapeHtml(listName)}</b> не найден. Посмотреть список: /lists`
     );
     return;
   }
@@ -308,7 +306,7 @@ export async function handleCallListCommand(
   if (list.member_ids.length === 0) {
     await client.sendMessage(
       chatId,
-      `ℹ️ В списке <b>${escapeHtml(listName)}</b> нет участников.`
+      `В списке <b>${escapeHtml(listName)}</b> нет участников.`
     );
     return;
   }
@@ -333,18 +331,34 @@ export async function handleCallListCommand(
   const chunkSize = settings.chunk_size || 5;
   const chunks = chunkArray(users, chunkSize);
 
-  const prefix = customMessage
-    ? `📋 [${escapeHtml(list.name)}] <b>${escapeHtml(customMessage)}</b>`
-    : `📋 Вызов списка <b>${escapeHtml(list.name)}</b>!`;
+  const formatListBatch = (batch: UserRecord[], customMsg?: string, isFirst: boolean = true) => {
+    const listTitle = escapeHtml(list.name);
+    if (settings.tag_mode === 'hidden') {
+      const links = batch.map((u) => `<a href="tg://user?id=${u.id}">&#8203;</a>`).join('');
+      if (isFirst) {
+        const body = customMsg?.trim()
+          ? escapeHtml(customMsg.trim())
+          : `Вызов ${listTitle}`;
+        return `${body}${links}`;
+      }
+      return links ? `.${links}` : '.';
+    }
 
-  const firstText = formatBatchMentions(chunks[0], settings.tag_mode, prefix);
+    const mentions = batch.map((u) => createMention(u, settings.tag_mode)).join(', ');
+    if (isFirst && customMsg?.trim()) {
+      return `${escapeHtml(customMsg.trim())}\n\n${mentions}`;
+    }
+    return mentions;
+  };
+
+  const firstText = formatListBatch(chunks[0], customMessage, true);
   await client.sendMessage(chatId, firstText);
 
   if (chunks.length > 1) {
     const sendRemaining = async () => {
       for (let i = 1; i < chunks.length; i++) {
         await sleep(1000);
-        const text = formatBatchMentions(chunks[i], settings.tag_mode);
+        const text = formatListBatch(chunks[i], undefined, false);
         try {
           await client.sendMessage(chatId, text);
         } catch (err) {

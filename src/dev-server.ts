@@ -108,8 +108,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`\n🚀 Zazyvala Bot dev server running at: http://localhost:${PORT}`);
-  console.log(`📡 Webhook endpoint: http://localhost:${PORT}/api/webhook`);
-  console.log(`⚙️ Setup endpoint:   http://localhost:${PORT}/api/setup`);
-  console.log(`❤️ Health endpoint:  http://localhost:${PORT}/api/health\n`);
+  console.log(`\nZazyvala Bot dev server running at: http://localhost:${PORT}`);
+  console.log(`Webhook endpoint: http://localhost:${PORT}/api/webhook`);
+  console.log(`Setup endpoint:   http://localhost:${PORT}/api/setup`);
+  console.log(`Health endpoint:  http://localhost:${PORT}/api/health\n`);
 });

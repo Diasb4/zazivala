@@ -149,7 +149,7 @@ export class TelegramClient {
   async setWebhook(
     url: string,
     secretToken?: string,
-    allowedUpdates: string[] = ['message', 'callback_query', 'my_chat_member']
+    allowedUpdates: string[] = ['message', 'callback_query', 'my_chat_member', 'chat_member']
   ): Promise<boolean> {
     return this.request<boolean>('setWebhook', {
       url,
@@ -181,16 +181,16 @@ export class TelegramClient {
 }
 
 export const DEFAULT_BOT_COMMANDS = [
-  { command: 'all', description: '📢 Созвать всех участников чата' },
-  { command: 'admins', description: '🚨 Созвать администраторов' },
-  { command: 'call', description: '📋 Созвать список участников' },
-  { command: 'setme', description: '🎭 Установить личный позывной/эмодзи' },
-  { command: 'out', description: '🔕 Отключить теги /all' },
-  { command: 'in', description: '🔔 Включить теги /all' },
-  { command: 'me', description: '👤 Мой профиль и статус' },
-  { command: 'lists', description: '📋 Списки участников' },
-  { command: 'settings', description: '⚙️ Настройки бота (админы)' },
-  { command: 'stats', description: '📊 Статистика участников' },
-  { command: 'help', description: '📖 Справка по командам' },
+  { command: 'all', description: 'Созвать всех участников чата' },
+  { command: 'admins', description: 'Созвать администраторов' },
+  { command: 'call', description: 'Созвать список участников' },
+  { command: 'setme', description: 'Установить личный позывной' },
+  { command: 'out', description: 'Отключить вызовы /all' },
+  { command: 'in', description: 'Включить вызовы /all' },
+  { command: 'me', description: 'Мой профиль и статус' },
+  { command: 'lists', description: 'Списки участников' },
+  { command: 'settings', description: 'Настройки бота' },
+  { command: 'stats', description: 'Статистика участников' },
+  { command: 'help', description: 'Справка по командам' },
 ];
 

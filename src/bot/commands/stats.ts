@@ -13,7 +13,7 @@ export async function handleStatsCommand(
   if (!isGroup) {
     await client.sendMessage(
       chatId,
-      '❌ Команда <b>/stats</b> работает только в группах.'
+      'Команда <b>/stats</b> работает только в группах.'
     );
     return;
   }
@@ -32,21 +32,18 @@ export async function handleStatsCommand(
 
   const cooldownText =
     stats.cooldown_remaining > 0
-      ? `⏳ <code>${stats.cooldown_remaining}</code> сек.`
-      : '✅ Готов к вызову';
+      ? `${stats.cooldown_remaining} сек.`
+      : 'Готов к вызову';
 
   const text =
-    '📊 <b>Статистика чата:</b>\n\n' +
-    `• 👥 <b>Всего участников в базе:</b> <code>${stats.total}</code>\n` +
-    `• 🔔 <b>Активных (получают пинг):</b> <code>${stats.active}</code>\n` +
-    `• 🔕 <b>Отписались (/out):</b> <code>${stats.opted_out}</code>\n` +
-    `• 📋 <b>Списков чата:</b> <code>${stats.lists_count}</code>\n\n` +
-    '⚙️ <b>Текущие настройки:</b>\n' +
+    '<b>Статистика чата:</b>\n\n' +
+    `• Всего в базе: <b>${stats.total}</b>\n` +
+    `• Активных: <b>${stats.active}</b>\n` +
+    `• Отписались (/out): <b>${stats.opted_out}</b>\n` +
+    `• Списков: <b>${stats.lists_count}</b>\n\n` +
     `• Режим: <b>${modeText}</b>\n` +
-    `• Пачка: <code>${settings.chunk_size}</code> чел./сообщение\n` +
-    `• Кулдаун: <code>${settings.cooldown_seconds}</code> сек. (${cooldownText})\n` +
-    `• Доступ: <b>${settings.permissions === 'admins' ? 'Только админы' : 'Все'}</b>\n\n` +
-    '<i>💡 Чтобы добавить новых участников в базу, им достаточно написать любое сообщение в чат!</i>';
+    `• Пачка: <code>${settings.chunk_size}</code>\n` +
+    `• Кулдаун: <code>${settings.cooldown_seconds}с</code> (${cooldownText})`;
 
   await client.sendMessage(chatId, text);
 }
