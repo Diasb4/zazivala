@@ -28,7 +28,7 @@ export class ZazyvalaBot {
   constructor(
     private readonly client: TelegramClient,
     private readonly storage: StorageAdapter
-  ) {}
+  ) { }
 
   /**
    * Process an incoming Telegram update
@@ -46,7 +46,24 @@ export class ZazyvalaBot {
       return;
     }
 
-    // 2. Handle Messages
+    // 2. Handle Bot Added to Group (my_chat_member event)
+    if (update.my_chat_member) {
+      const ev = update.my_chat_member;
+      const isGroup =
+        ev.chat.type === 'group' || ev.chat.type === 'supergroup';
+      const isJoined =
+        (ev.new_chat_member.status === 'member' ||
+          ev.new_chat_member.status === 'administrator') &&
+        (ev.old_chat_member.status === 'left' ||
+          ev.old_chat_member.status === 'kicked');
+
+      if (isGroup && isJoined) {
+        await this.sendGroupWelcome(ev.chat.id);
+      }
+      return;
+    }
+
+    // 3. Handle Messages
     const message: TelegramMessage | undefined =
       update.message || update.edited_message;
     if (!message) return;
@@ -54,6 +71,15 @@ export class ZazyvalaBot {
     const chatId = message.chat.id;
     const isGroup =
       message.chat.type === 'group' || message.chat.type === 'supergroup';
+
+    // If bot was added via new_chat_members in group
+    if (isGroup && message.new_chat_members && message.new_chat_members.length > 0) {
+      const botAdded = message.new_chat_members.some((m) => m.is_bot);
+      if (botAdded) {
+        // Send welcoming message with commands
+        await this.sendGroupWelcome(chatId);
+      }
+    }
 
     // Passive Activity Tracking for Group Chats
     if (isGroup) {
@@ -264,4 +290,28 @@ export class ZazyvalaBot {
 
     return { command: cleanCmd, args };
   }
+
+  /**
+   * Sends introductory greeting and commands menu when bot joins a group
+   */
+  async sendGroupWelcome(chatId: number): Promise<void> {
+    const text =
+      '<b>Всем привет! Я Зазывала (Tag Bot)</b> — бот для быстрого созыва участников чата.\n\n' +
+      '<b>Основные команды:</b>\n' +
+      '• <code>/all [сообщение]</code> — созвать всех участников чата\n' +
+      '• <code>/admins [сообщение]</code> — созвать администраторов чата\n' +
+      '• <code>/setme &lt;позывной&gt;</code> — задать личный позывной/эмодзи\n' +
+      '• <code>/out</code> и <code>/in</code> — отключить/включить вызовы /all\n' +
+      '• <code>/settings</code> — настройки чата (скрытый режим, кулдаун, права)\n' +
+      '• <code>/help</code> — подробная справка и списки\n\n' +
+      '<b>Как это работает:</b> Telegram Bot API не передает ботам список участников сразу. ' +
+      'Я автоматически запоминаю вас, когда вы пишете сообщения в чат!';
+
+    try {
+      await this.client.sendMessage(chatId, text);
+    } catch (err) {
+      console.error('Failed to send group welcome:', err);
+    }
+  }
 }
+

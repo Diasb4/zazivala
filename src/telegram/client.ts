@@ -163,9 +163,34 @@ export class TelegramClient {
     return this.request<TelegramWebhookInfo>('getWebhookInfo');
   }
 
+  async setMyCommands(
+    commands: Array<{ command: string; description: string }>,
+    scope?: Record<string, any>
+  ): Promise<boolean> {
+    return this.request<boolean>('setMyCommands', {
+      commands,
+      scope,
+    });
+  }
+
   async deleteWebhook(dropPendingUpdates: boolean = false): Promise<boolean> {
     return this.request<boolean>('deleteWebhook', {
       drop_pending_updates: dropPendingUpdates,
     });
   }
 }
+
+export const DEFAULT_BOT_COMMANDS = [
+  { command: 'all', description: '📢 Созвать всех участников чата' },
+  { command: 'admins', description: '🚨 Созвать администраторов' },
+  { command: 'call', description: '📋 Созвать список участников' },
+  { command: 'setme', description: '🎭 Установить личный позывной/эмодзи' },
+  { command: 'out', description: '🔕 Отключить теги /all' },
+  { command: 'in', description: '🔔 Включить теги /all' },
+  { command: 'me', description: '👤 Мой профиль и статус' },
+  { command: 'lists', description: '📋 Списки участников' },
+  { command: 'settings', description: '⚙️ Настройки бота (админы)' },
+  { command: 'stats', description: '📊 Статистика участников' },
+  { command: 'help', description: '📖 Справка по командам' },
+];
+

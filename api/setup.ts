@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getConfig } from '../src/config.js';
-import { TelegramClient } from '../src/telegram/client.js';
+import { TelegramClient, DEFAULT_BOT_COMMANDS } from '../src/telegram/client.js';
 
 export default async function handler(
   req: VercelRequest,
@@ -30,20 +30,21 @@ export default async function handler(
     const webhookUrl = `${computedAppUrl}/api/webhook`;
 
     if (action === 'set') {
-      const success = await client.setWebhook(
-        webhookUrl,
-        config.telegramSecretToken
-      );
+      const [success, commandsSuccess] = await Promise.all([
+        client.setWebhook(webhookUrl, config.telegramSecretToken),
+        client.setMyCommands(DEFAULT_BOT_COMMANDS),
+      ]);
       const info = await client.getWebhookInfo();
 
       return res.status(200).json({
         ok: true,
-        message: 'Webhook successfully configured!',
+        message: 'Webhook and commands menu successfully configured!',
         bot: {
           id: me.id,
           username: me.username,
           first_name: me.first_name,
         },
+        commands_configured: commandsSuccess,
         webhook: {
           url: webhookUrl,
           has_secret_token: !!config.telegramSecretToken,
