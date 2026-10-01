@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "functions": {
+    "api/webhook.ts": {
+      "maxDuration": 15,
+      "memory": 1024
+    },
+    "api/setup.ts": {
+      "maxDuration": 10,
+      "memory": 512
+    },
+    "api/health.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ]
+}

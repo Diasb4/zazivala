@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Зазывала (Zazyvala) • Telegram Bot on Vercel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 24, 38, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.35);
+      --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --code-bg: #0d1322;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 70%, rgba(139, 92, 246, 0.12) 0%, transparent 40%);
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+      margin-bottom: 20px;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--success);
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 640px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 28px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .card h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-box {
+      background: var(--code-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--accent-gradient);
+      color: white;
+      box-shadow: 0 8px 20px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.95;
+      transform: scale(0.99);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-main);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 10px;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .features-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+
+    .features-list .icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .cmd-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    .cmd-table tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .cmd-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .cmd-table td {
+      padding: 10px 0;
+      font-size: 0.9rem;
+    }
+
+    .cmd-table code {
+      background: var(--code-bg);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #60a5fa;
+      font-size: 0.85rem;
+    }
+
+    .optimization-tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      margin-left: 6px;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 60px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Vercel Serverless Ready • Zero Cold Start
+      </div>
+      <h1>Зазывала 2.0 (Zazyvala)</h1>
+      <p class="subtitle">
+        Сверхбыстрый Telegram-бот для мгновенного созыва участников чата, спроектированный с учетом жестких лимитов Vercel Serverless (10 сек. таймаут, stateless, без зависаний).
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- Webhook Management Card -->
+      <div class="card">
+        <h2>📡 Статус вебхука</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+          Проверьте и зарегистрируйте вебхук Telegram в один клик.
+        </p>
+        <div id="status-display" class="status-box">Загрузка информации о вебхуке...</div>
+        <button id="btn-register" class="btn btn-primary">🔗 Зарегистрировать вебхук</button>
+        <button id="btn-check" class="btn btn-secondary">🔄 Проверить статус</button>
+      </div>
+
+      <!-- Why It Beats Vercel Limits Card -->
+      <div class="card">
+        <h2>⚡ Оптимизации под Vercel</h2>
+        <ul class="features-list">
+          <li>
+            <span class="icon">🚀</span>
+            <div>
+              <b>Фоновая отправка (waitUntil)</b>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">
+                Вебхук Telegram мгновенно получает 200 OK, а рассылка пачек продолжается в фоне без таймаутов.
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="icon">📦</span>
+            <div>
+              <b>Upstash Redis Pipeline</b>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">
+                Все профили участников загружаются за 1 HTTP-запрос (~15 мс) без пула соединений.
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="icon">👻</span>
+            <div>
+              <b>Скрытый режим (Zero-Width)</b>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">
+                Тегает участников невидимыми ссылками — участники получают push-уведомление, а чат остается чистым.
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="icon">🛡️</span>
+            <div>
+              <b>Защита от флуда и кулдаун</b>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">
+                Атомарный TTL в Redis блокирует спам без нагрузки на серверную функцию.
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Commands Card -->
+    <div class="card">
+      <h2>📖 Основные команды бота</h2>
+      <table class="cmd-table">
+        <tbody>
+          <tr>
+            <td><code>/all [текст]</code> или <code>/tag</code></td>
+            <td>Созвать всех активных участников группы (пачками по 5 для 100% доставки пушей)</td>
+          </tr>
+          <tr>
+            <td><code>/admins [текст]</code></td>
+            <td>Созвать всех администраторов чата через прямое API Telegram</td>
+          </tr>
+          <tr>
+            <td><code>/setme &lt;позывной&gt;</code></td>
+            <td>Установить личный позывной/эмодзи (например: <code>/setme ⚡ Тор</code>)</td>
+          </tr>
+          <tr>
+            <td><code>/out</code> и <code>/in</code></td>
+            <td>Отписаться или подписаться на уведомления от /all (уважение к личному покою)</td>
+          </tr>
+          <tr>
+            <td><code>/settings</code></td>
+            <td>Интерактивная панель: скрытый режим, кулдаун, размер пачки, права доступа</td>
+          </tr>
+          <tr>
+            <td><code>/lists</code>, <code>/create_list</code>, <code>/call</code></td>
+            <td>Создание пользовательских списков (игры, дежурные, отдел)</td>
+          </tr>
+          <tr>
+            <td><code>/stats</code></td>
+            <td>Статистика базы участников, активных и отписавшихся</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>
+      Разработано с акцентом на производительность и надежность • Zazyvala 2.0
+    </footer>
+  </div>
+
+  <script>
+    const statusBox = document.getElementById('status-display');
+    const btnRegister = document.getElementById('btn-register');
+    const btnCheck = document.getElementById('btn-check');
+
+    async function checkStatus() {
+      statusBox.textContent = 'Опрос API Telegram...';
+      try {
+        const res = await fetch('/api/setup');
+        const data = await res.json();
+        statusBox.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        statusBox.textContent = 'Ошибка проверки: ' + err.message;
+      }
+    }
+
+    async function registerWebhook() {
+      statusBox.textContent = 'Регистрация вебхука...';
+      try {
+        const res = await fetch('/api/setup?action=set');
+        const data = await res.json();
+        statusBox.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        statusBox.textContent = 'Ошибка регистрации: ' + err.message;
+      }
+    }
+
+    btnCheck.addEventListener('click', checkStatus);
+    btnRegister.addEventListener('click', registerWebhook);
+    checkStatus();
+  </script>
+</body>
+</html>
